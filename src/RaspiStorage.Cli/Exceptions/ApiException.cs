@@ -1,6 +1,6 @@
 namespace RaspiStorage.Cli.Exceptions;
 
-public sealed record ApiProblem(
+public record ApiProblem(
     string? Title,
     int? Status,
     string? Detail,
@@ -8,7 +8,7 @@ public sealed record ApiProblem(
     string? TraceId,
     Dictionary<string, string[]>? Errors);
 
-public sealed class ApiException(int status, ApiProblem? problem)
+public class ApiException(int status, ApiProblem? problem)
     : Exception(problem?.Detail ?? problem?.Title ?? $"Server returned HTTP {status}")
 {
     public int Status { get; } = status;

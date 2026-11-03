@@ -4,10 +4,6 @@ using RaspiStorage.Cli.Config;
 using RaspiStorage.Cli.Exceptions;
 using Spectre.Console;
 
-var config = CliConfig.Load();
-var http = CliConfig.CreateHttpClient(config);
-var filesApi = new FilesAPI(http);
-
 AnsiConsole.Write(new FigletText("Raspi Storage").Color(Color.Grey));
 
 using var cts = new CancellationTokenSource();
@@ -15,10 +11,17 @@ Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
 
 try
 {
+    var http = CliConfig.CreateHttpClient();
+    var filesApi = new FilesApi(http);
+
     var id = Guid.Parse("c39ee7ea-57bf-4e30-8cfe-a1912471e583");
 
     await filesApi.DeleteAsync(id, cts.Token);
-} catch (ApiException ex)
+} catch (ConfigException ex)
+{
+    Console.Error.WriteLine(ex.Message);
+} 
+catch (ApiException ex)
 {
     Console.Error.WriteLine(ex.Code switch
     {
@@ -34,10 +37,6 @@ try
 catch (OperationCanceledException) when (cts.IsCancellationRequested)
 {
     Console.Error.WriteLine("Cancelled.");
-}
-catch (TaskCanceledException)
-{
-    Console.Error.WriteLine("The request timed out.");
 }
 catch (HttpRequestException ex) when (ex.HttpRequestError == HttpRequestError.SecureConnectionError
                                         || ex.InnerException is AuthenticationException)
