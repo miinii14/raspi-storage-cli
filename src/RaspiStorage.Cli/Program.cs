@@ -14,11 +14,10 @@ try
     return 1;
 }
 
-FilesApi filesApi = new FilesApi(http);
-FoldersApi foldersApi = new FoldersApi(http);
-Context context = new Context();
-CommandShell shell = new CommandShell(http, context, filesApi, foldersApi);
-
+FilesApi filesApi = new(http);
+FoldersApi foldersApi = new(http);
+Context context = new();
+CommandShell shell = new(http, context, filesApi, foldersApi);
 
 await shell.RunAsync();
 

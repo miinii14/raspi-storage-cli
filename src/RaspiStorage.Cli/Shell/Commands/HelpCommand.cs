@@ -6,6 +6,7 @@ public class HelpCommand : ICommand
 {
     private readonly IReadOnlyDictionary<string, ICommand> _commands;
     public string Description => "Show available commands";
+    
 
     public HelpCommand(IReadOnlyDictionary<string, ICommand> commands)
     {

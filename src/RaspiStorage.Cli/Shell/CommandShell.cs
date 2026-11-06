@@ -14,11 +14,7 @@ public class CommandShell
     private readonly FilesApi _filesApi;
     private readonly FoldersApi _foldersApi;
     private CancellationTokenSource? _currentCts;
-    private readonly Dictionary<string, ICommand> _commands = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["exit"] = new ExitCommand(),
-    };
-
+    private readonly Dictionary<string, ICommand> _commands = new(StringComparer.OrdinalIgnoreCase);
     public CommandShell(HttpClient http, Context context, FilesApi filesApi, FoldersApi foldersApi)
     {
         _http = http;
@@ -26,7 +22,9 @@ public class CommandShell
         _filesApi = filesApi;
         _foldersApi = foldersApi;
 
+        _commands["exit"] = new ExitCommand();
         _commands["help"] = new HelpCommand(_commands);
+        _commands["ls"] =   new LsCommand(_filesApi, _foldersApi);
 
         Console.CancelKeyPress += (_, e) => { e.Cancel = true; _currentCts?.Cancel(); };
     }
@@ -72,7 +70,7 @@ public class CommandShell
 
         while (!_context.Exit)
         {
-            AnsiConsole.Markup("[steelblue1]rs[/][grey]:[/][bold]/[/] [grey]❯[/] ");
+            AnsiConsole.Markup($"[steelblue1]rs[/][grey]:[/][bold]{Markup.Escape(_context.Path)}[/] [grey]❯[/] ");
             var line = Console.ReadLine();
             if (line is null)
                 break;
@@ -127,6 +125,10 @@ public class CommandShell
             catch (HttpRequestException ex)
             {
                 PrintError("Could not reach the server", ex.Message);
+            }
+            catch (Exception ex)
+            {
+                PrintError("Unexpected error", ex.Message);
             }
             finally
             {
