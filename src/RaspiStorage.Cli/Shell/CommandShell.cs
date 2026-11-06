@@ -18,13 +18,13 @@ public class CommandShell
     public CommandShell(HttpClient http, Context context, FilesApi filesApi, FoldersApi foldersApi)
     {
         _http = http;
-        _context = context;
         _filesApi = filesApi;
         _foldersApi = foldersApi;
-
+        _context = context;
+        _commands["ls"]   = new LsCommand(_filesApi, _foldersApi);
         _commands["exit"] = new ExitCommand();
+        _commands["cd"]   = new CdCommand(_foldersApi);
         _commands["help"] = new HelpCommand(_commands);
-        _commands["ls"] =   new LsCommand(_filesApi, _foldersApi);
 
         Console.CancelKeyPress += (_, e) => { e.Cancel = true; _currentCts?.Cancel(); };
     }
@@ -37,6 +37,7 @@ public class CommandShell
     private static void PrintError(string title, string message, IEnumerable<string>? details = null)
     {
         Stderr.MarkupLine($"[red bold]✗ {Markup.Escape(title)}:[/] {Markup.Escape(message)}");
+
 
         foreach (var detail in details ?? [])
             Stderr.MarkupLine($"    [grey]•[/] {Markup.Escape(detail)}");
@@ -91,7 +92,7 @@ public class CommandShell
             try
             {
                 await cmd.ExecuteAsync(tokens[1..], _context, cts.Token);
-            }
+            } 
             catch (ApiException ex)
             {
                 var title = $"{ex.Status} {ex.Problem?.Title ?? ((HttpStatusCode)ex.Status).ToString()}";
@@ -111,6 +112,10 @@ public class CommandShell
                     .SelectMany(field => field.Value.Select(error => $"{field.Key}: {error}"));
 
                 PrintError(title, message, details);
+            }
+            catch (CliException ex)
+            {
+                PrintError(ex.Title, ex.Message);
             }
             catch (OperationCanceledException) when (cts.IsCancellationRequested)
             {
