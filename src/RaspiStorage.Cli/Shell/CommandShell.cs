@@ -25,6 +25,7 @@ public class CommandShell
         _commands["exit"] = new ExitCommand();
         _commands["cd"]   = new CdCommand(_foldersApi);
         _commands["help"] = new HelpCommand(_commands);
+        _commands["rm"]   = new RmCommand(_foldersApi, _filesApi);
 
         Console.CancelKeyPress += (_, e) => { e.Cancel = true; _currentCts?.Cancel(); };
     }
