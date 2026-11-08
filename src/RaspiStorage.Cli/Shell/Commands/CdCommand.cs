@@ -1,8 +1,7 @@
 using RaspiStorage.Cli.Api;
-using RaspiStorage.Cli.DTOs;
 using RaspiStorage.Cli.Exceptions;
 
-namespace RaspiStorage.Cli.Shell;
+namespace RaspiStorage.Cli.Shell.Commands;
 
 public class CdCommand : ICommand
 {

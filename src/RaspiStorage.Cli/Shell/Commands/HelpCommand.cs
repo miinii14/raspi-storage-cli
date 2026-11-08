@@ -1,6 +1,6 @@
 using Spectre.Console;
 
-namespace RaspiStorage.Cli.Shell;
+namespace RaspiStorage.Cli.Shell.Commands;
 
 public class HelpCommand : ICommand
 {

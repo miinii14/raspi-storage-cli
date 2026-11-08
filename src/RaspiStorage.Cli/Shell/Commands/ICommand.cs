@@ -1,4 +1,4 @@
-namespace RaspiStorage.Cli.Shell;
+namespace RaspiStorage.Cli.Shell.Commands;
 
 public interface ICommand
 {

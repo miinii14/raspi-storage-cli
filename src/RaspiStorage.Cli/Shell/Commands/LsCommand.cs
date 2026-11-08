@@ -1,7 +1,7 @@
 using RaspiStorage.Cli.Api;
 using Spectre.Console;
 
-namespace RaspiStorage.Cli.Shell;
+namespace RaspiStorage.Cli.Shell.Commands;
 
 public class LsCommand : ICommand
 {

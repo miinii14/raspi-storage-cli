@@ -2,10 +2,21 @@ using RaspiStorage.Cli.Api;
 using RaspiStorage.Cli.DTOs;
 using RaspiStorage.Cli.Exceptions;
 
-namespace RaspiStorage.Cli.Shell;
+namespace RaspiStorage.Cli.Shell.Commands;
 
 public static class PathResolver
 {
+    public static (string ParentPath, string Name) Split(string path, string commandName)
+    {
+        var slash = path.LastIndexOf('/');
+        var name = path[(slash + 1)..];
+
+        if (name == "")
+            throw new CliException(commandName, "No name provided.");
+
+        return (path[..(slash + 1)], name);
+    }
+
     public static async Task<List<FolderDto>> ResolveAsync(string path, Context ctx, CancellationToken ct, FoldersApi foldersApi, string commandName)
     {
         var folders = path.Split("/", StringSplitOptions.RemoveEmptyEntries);
