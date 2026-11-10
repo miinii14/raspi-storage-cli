@@ -22,14 +22,16 @@ public class CommandShell
         _filesApi = filesApi;
         _foldersApi = foldersApi;
         _context = context;
-        _commands["ls"]     = new LsCommand(_filesApi, _foldersApi);
-        _commands["exit"]   = new ExitCommand();
-        _commands["cd"]     = new CdCommand(_foldersApi);
-        _commands["help"]   = new HelpCommand(_commands);
-        _commands["rm"]     = new RmCommand(_foldersApi, _filesApi);
-        _commands["mkdir"]  = new MkDirCommand(_foldersApi);
-        _commands["rename"] = new RenameCommand(_foldersApi, _filesApi);
-        _commands["mv"] = new MvCommand(_foldersApi, _filesApi);
+        _commands["ls"]       = new LsCommand(_filesApi, _foldersApi);
+        _commands["exit"]     = new ExitCommand();
+        _commands["cd"]       = new CdCommand(_foldersApi);
+        _commands["help"]     = new HelpCommand(_commands);
+        _commands["rm"]       = new RmCommand(_foldersApi, _filesApi);
+        _commands["mkdir"]    = new MkDirCommand(_foldersApi);
+        _commands["rename"]   = new RenameCommand(_foldersApi, _filesApi);
+        _commands["mv"]       = new MvCommand(_foldersApi, _filesApi);
+        _commands["upload"]   = new UploadCommand(_foldersApi, _filesApi);
+        _commands["download"] = new DownloadCommand(_foldersApi, _filesApi);
 
         Console.CancelKeyPress += (_, e) => { e.Cancel = true; _currentCts?.Cancel(); };
     }
@@ -73,6 +75,9 @@ public class CommandShell
     public async Task RunAsync()
     {
         PrintBanner();
+
+        if (!Console.IsOutputRedirected)
+            Console.Write("\e[?2004l");
 
         while (!_context.Exit)
         {

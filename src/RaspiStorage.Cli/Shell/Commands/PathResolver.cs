@@ -50,4 +50,15 @@ public static class PathResolver
 
         return foldersSequence;       
     }
+
+    public static string ResolveLocal(string path)
+    {
+        if (path == "~" || path.StartsWith("~/"))
+        {
+            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            path = Path.Combine(home, path.TrimStart('~', '/'));
+        }
+
+        return Path.GetFullPath(path);
+    }
 }
