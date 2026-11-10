@@ -1,4 +1,6 @@
 using RaspiStorage.Cli.Api;
+using RaspiStorage.Cli.DTOs;
+using RaspiStorage.Cli.Exceptions;
 using Spectre.Console;
 
 namespace RaspiStorage.Cli.Shell.Commands;
@@ -16,15 +18,35 @@ public class LsCommand : ICommand
     }
 
     public async Task ExecuteAsync(string[] args, Context ctx, CancellationToken ct){
-        var files = await _filesApi.GetByFolderIdAsync(ctx.CurrentFolder?.Id, ct);
-        var folders = await _foldersApi.GetByParentIdAsync(ctx.CurrentFolder?.Id, ct);
+        if (args.Length > 1)
+            throw new CliException("ls", "Usage: ls or ls <path>");
 
+        Guid? parentFolderId;
+        
+        if (args is not [])
+        {
+            var path = await PathResolver.ResolveAsync(args[0], ctx, ct, _foldersApi, "ls");
+            parentFolderId = path.LastOrDefault()?.Id;
+        }
+        else
+        {
+            parentFolderId = ctx.CurrentFolder?.Id;
+        }
+        
+        var files = await _filesApi.GetByFolderIdAsync(parentFolderId, ct);
+        var folders = await _foldersApi.GetByParentIdAsync(parentFolderId, ct);
+    
         if (!files.Any() && !folders.Any())
         {
             AnsiConsole.MarkupLine("[grey]Folder is empty[/]");
             return;
         }
 
+        PrintTable(files, folders);
+    }
+
+    private void PrintTable(IEnumerable<FileDto> files, IEnumerable<FolderDto> folders)
+    {
         var table = new Table()
             .Border(TableBorder.Rounded)
             .BorderColor(Color.Grey)
