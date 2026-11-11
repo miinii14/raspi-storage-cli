@@ -31,7 +31,7 @@ public class RmCommand : ICommand
             if (ctx.Folders.Any(f => f.Id == folder.Id))
                 throw new CliException("rm", "Can't remove the current folder or its parent");
             
-            if (!AnsiConsole.Confirm($"Delete folder '{folder.Name}' and everything inside?", defaultValue: false))
+            if (!AnsiConsole.Confirm($"Delete folder '{Markup.Escape(folder.Name)}' and everything inside?", defaultValue: false))
                 return;
             
             await _foldersApi.DeleteAsync(folder.Id, ct);
