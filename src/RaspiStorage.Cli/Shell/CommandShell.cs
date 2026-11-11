@@ -32,6 +32,7 @@ public class CommandShell
         _commands["mv"]       = new MvCommand(_foldersApi, _filesApi);
         _commands["upload"]   = new UploadCommand(_foldersApi, _filesApi);
         _commands["download"] = new DownloadCommand(_foldersApi, _filesApi);
+        _commands["clear"] = new ClearCommand();
 
         Console.CancelKeyPress += (_, e) => { e.Cancel = true; _currentCts?.Cancel(); };
     }
