@@ -6,7 +6,8 @@ namespace RaspiStorage.Cli.Shell.Commands;
 
 public class RmCommand : ICommand
 {
-    public string Description { get; } = "Remove file or folder";
+    public string Usage => "rm <path>";
+    public string Description => "Remove file or folder";
     private readonly FoldersApi _foldersApi;
     private readonly FilesApi _filesApi;
     
@@ -19,7 +20,7 @@ public class RmCommand : ICommand
     public async Task ExecuteAsync(string[] args, Context ctx, CancellationToken ct)
     {
         if (args.Length != 1)
-            throw new CliException("rm", "Usage: rm <path>");
+            throw new CliException("rm", $"Usage: {Usage}");
 
         var (parentPath, name) = PathResolver.Split(args[0], "rm");
 
@@ -35,6 +36,7 @@ public class RmCommand : ICommand
                 return;
             
             await _foldersApi.DeleteAsync(folder.Id, ct);
+            Output.Success($"Removed [bold blue]{Markup.Escape(folder.Name)}/[/]");
             return;
         }
 
@@ -43,5 +45,6 @@ public class RmCommand : ICommand
             ?? throw new CliException("rm", $"'{name}' not found.");
 
         await _filesApi.DeleteAsync(file.Id, ct);
+        Output.Success($"Removed [bold]{Markup.Escape(file.Name)}[/]");
     }
 }

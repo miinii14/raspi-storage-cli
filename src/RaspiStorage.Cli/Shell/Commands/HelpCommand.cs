@@ -5,8 +5,8 @@ namespace RaspiStorage.Cli.Shell.Commands;
 public class HelpCommand : ICommand
 {
     private readonly IReadOnlyDictionary<string, ICommand> _commands;
+    public string Usage => "help";
     public string Description => "Show available commands";
-    
 
     public HelpCommand(IReadOnlyDictionary<string, ICommand> commands)
     {
@@ -19,8 +19,8 @@ public class HelpCommand : ICommand
             .AddColumn(new GridColumn().PadRight(4))
             .AddColumn();
 
-        foreach (var (name, command) in _commands.OrderBy(c => c.Key))
-            grid.AddRow($"[bold]{name}[/]", Markup.Escape(command.Description));
+        foreach (var command in _commands.Values.OrderBy(c => c.Usage))
+            grid.AddRow($"[bold]{Markup.Escape(command.Usage)}[/]", $"[grey]{Markup.Escape(command.Description)}[/]");
 
         AnsiConsole.Write(grid);
         return Task.CompletedTask;

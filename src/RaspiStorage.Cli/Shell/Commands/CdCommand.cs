@@ -5,7 +5,8 @@ namespace RaspiStorage.Cli.Shell.Commands;
 
 public class CdCommand : ICommand
 {
-    public string Description => "Move to folder's localization";
+    public string Usage => "cd <path>";
+    public string Description => "Change current folder";
 
     private readonly FoldersApi _foldersApi;
 
@@ -16,11 +17,8 @@ public class CdCommand : ICommand
 
     public async Task ExecuteAsync(string[] args, Context ctx, CancellationToken ct)
     {
-        if (args is [])
-            throw new CliException("cd", "No path provided.");
-
-        if(args.Length > 1)
-            throw new CliException("cd", "Too many arguments.");
+        if (args.Length != 1)
+            throw new CliException("cd", $"Usage: {Usage}");
 
         ctx.Folders = await PathResolver.ResolveAsync(args[0], ctx, ct, _foldersApi, "cd");
     }

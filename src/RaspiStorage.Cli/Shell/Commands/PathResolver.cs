@@ -51,6 +51,8 @@ public static class PathResolver
         return foldersSequence;       
     }
 
+    public static string ToPath(IEnumerable<FolderDto> chain) => "/" + string.Join("/", chain.Select(f => f.Name));
+
     public static string ResolveLocal(string path)
     {
         if (path == "~" || path.StartsWith("~/"))

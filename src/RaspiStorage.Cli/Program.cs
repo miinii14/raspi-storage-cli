@@ -10,7 +10,7 @@ try
     http = CliConfig.CreateHttpClient();
 } catch (ConfigException ex)
 {
-    Console.Error.WriteLine(ex.Message);    
+    Output.Error("Config error", ex.Message);
     return 1;
 }
 

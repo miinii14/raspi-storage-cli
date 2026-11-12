@@ -1,10 +1,12 @@
 using RaspiStorage.Cli.Api;
 using RaspiStorage.Cli.Exceptions;
+using Spectre.Console;
 
 namespace RaspiStorage.Cli.Shell.Commands;
 
 public class RenameCommand : ICommand
 {
+    public string Usage => "rename <path> <new-name>";
     public string Description => "Rename file or folder";
     private readonly FoldersApi _foldersApi;
     private readonly FilesApi _filesApi;
@@ -18,7 +20,7 @@ public class RenameCommand : ICommand
     public async Task ExecuteAsync(string[] args, Context ctx, CancellationToken ct)
     {
         if (args.Length != 2)
-            throw new CliException("rename", "Usage: rename <path> <new-name>");
+            throw new CliException("rename", $"Usage: {Usage}");
 
         var (parentPath, oldName) = PathResolver.Split(args[0], "rename");
         var newName = args[1];
@@ -29,7 +31,13 @@ public class RenameCommand : ICommand
         var folders = await _foldersApi.GetByParentIdAsync(parentId, ct);
         if (folders.FirstOrDefault(f => f.Name == oldName) is { } folder)
         {
-            await _foldersApi.RenameAsync(folder.Id, newName, ct);
+            var renamed = await _foldersApi.RenameAsync(folder.Id, newName, ct);
+
+            var index = ctx.Folders.FindIndex(f => f.Id == renamed.Id);
+            if (index >= 0)
+                ctx.Folders[index] = renamed;
+
+            PrintRenamed(oldName + "/", renamed.Name + "/");
             return;
         }
 
@@ -37,6 +45,10 @@ public class RenameCommand : ICommand
         var file = files.FirstOrDefault(f => f.Name == oldName)
             ?? throw new CliException("rename", $"'{oldName}' not found.");
 
-        await _filesApi.RenameAsync(file.Id, newName, ct);
+        var renamedFile = await _filesApi.RenameAsync(file.Id, newName, ct);
+        PrintRenamed(oldName, renamedFile.Name);
     }
+
+    private static void PrintRenamed(string oldName, string newName) =>
+        Output.Success($"Renamed {Markup.Escape(oldName)} [grey]→[/] [bold]{Markup.Escape(newName)}[/]");
 }

@@ -6,6 +6,7 @@ namespace RaspiStorage.Cli.Shell.Commands;
 
 public class UploadCommand : ICommand
 {
+    public string Usage => "upload <local-file> [remote-dir]";
     public string Description => "Upload local file to current or given folder";
 
     private readonly FoldersApi _foldersApi;
@@ -20,7 +21,7 @@ public class UploadCommand : ICommand
     public async Task ExecuteAsync(string[] args, Context ctx, CancellationToken ct)
     {
         if (args.Length is < 1 or > 2)
-            throw new CliException("upload", "Usage: upload <local> [remote-dir]");
+            throw new CliException("upload", $"Usage: {Usage}");
 
         var localPath = PathResolver.ResolveLocal(args[0]);
 
@@ -49,6 +50,6 @@ public class UploadCommand : ICommand
                 return await _filesApi.UploadAsync(stream, name, folderId, ct);
             });
 
-        AnsiConsole.MarkupLine($"[green]✔[/] Uploaded [bold]{Markup.Escape(uploaded.Name)}[/] [grey]({Format.Size(uploaded.SizeBytes)})[/]");
+        Output.Success($"Uploaded [bold]{Markup.Escape(uploaded.Name)}[/] [grey]({Format.Size(uploaded.SizeBytes)})[/]");
     }
 }

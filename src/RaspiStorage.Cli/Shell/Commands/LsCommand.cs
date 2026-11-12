@@ -7,7 +7,8 @@ namespace RaspiStorage.Cli.Shell.Commands;
 
 public class LsCommand : ICommand
 {
-    public string Description => "List files and folders in current folder";
+    public string Usage => "ls [path]";
+    public string Description => "List files and folders";
     private readonly FilesApi _filesApi;
     private readonly FoldersApi _foldersApi;
 
@@ -19,7 +20,7 @@ public class LsCommand : ICommand
 
     public async Task ExecuteAsync(string[] args, Context ctx, CancellationToken ct){
         if (args.Length > 1)
-            throw new CliException("ls", "Usage: ls or ls <path>");
+            throw new CliException("ls", $"Usage: {Usage}");
 
         Guid? parentFolderId;
         

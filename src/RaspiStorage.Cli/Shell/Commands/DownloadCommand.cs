@@ -6,6 +6,7 @@ namespace RaspiStorage.Cli.Shell.Commands;
 
 public class DownloadCommand : ICommand
 {
+    public string Usage => "download <remote-file> [local]";
     public string Description => "Download file to current or given local path";
 
     private readonly FoldersApi _foldersApi;
@@ -20,7 +21,7 @@ public class DownloadCommand : ICommand
     public async Task ExecuteAsync(string[] args, Context ctx, CancellationToken ct)
     {
         if (args.Length is < 1 or > 2)
-            throw new CliException("download", "Usage: download <remote-file> [local]");
+            throw new CliException("download", $"Usage: {Usage}");
 
         var (parentPath, name) = PathResolver.Split(args[0], "download");
         var parentId = (await PathResolver.ResolveAsync(parentPath, ctx, ct, _foldersApi, "download")).LastOrDefault()?.Id;
@@ -71,6 +72,6 @@ public class DownloadCommand : ICommand
             throw;
         }
 
-        AnsiConsole.MarkupLine($"[green]✔[/] Saved to [bold]{Markup.Escape(target)}[/] [grey]({Format.Size(file.SizeBytes)})[/]");
+        Output.Success($"Saved to [bold]{Markup.Escape(target)}[/] [grey]({Format.Size(file.SizeBytes)})[/]");
     }
 }

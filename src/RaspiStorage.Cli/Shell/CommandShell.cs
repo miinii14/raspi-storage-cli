@@ -1,6 +1,8 @@
 using System.Net;
 using System.Reflection;
 using System.Security.Authentication;
+using PrettyPrompt;
+using PrettyPrompt.Highlighting;
 using RaspiStorage.Cli.Api;
 using RaspiStorage.Cli.Exceptions;
 using RaspiStorage.Cli.Shell.Commands;
@@ -16,6 +18,8 @@ public class CommandShell
     private readonly FoldersApi _foldersApi;
     private CancellationTokenSource? _currentCts;
     private readonly Dictionary<string, ICommand> _commands = new(StringComparer.OrdinalIgnoreCase);
+    private readonly PromptConfiguration _promptConfig = new();
+    private readonly Prompt _prompt;
     public CommandShell(HttpClient http, Context context, FilesApi filesApi, FoldersApi foldersApi)
     {
         _http = http;
@@ -36,20 +40,7 @@ public class CommandShell
         _commands["tree"]     = new TreeCommand(_foldersApi, _filesApi);
 
         Console.CancelKeyPress += (_, e) => { e.Cancel = true; _currentCts?.Cancel(); };
-    }
-
-    private static readonly IAnsiConsole Stderr = AnsiConsole.Create(new AnsiConsoleSettings
-    {
-        Out = new AnsiConsoleOutput(Console.Error),
-    });
-
-    private static void PrintError(string title, string message, IEnumerable<string>? details = null)
-    {
-        Stderr.MarkupLine($"[red bold]✗ {Markup.Escape(title)}:[/] {Markup.Escape(message)}");
-
-
-        foreach (var detail in details ?? [])
-            Stderr.MarkupLine($"    [grey]•[/] {Markup.Escape(detail)}");
+        _prompt = new Prompt(persistentHistoryFilepath: null, configuration: _promptConfig);
     }
 
     private void PrintBanner()
@@ -73,6 +64,26 @@ public class CommandShell
 
         AnsiConsole.Write(panel);
     }
+    
+    private static FormattedString BuildPrompt(string path)
+    {
+        var text = $"rs:{path} ❯ ";
+        return new FormattedString(text,
+            new FormatSpan(0, 2, AnsiColor.Rgb(95, 175, 255)),
+            new FormatSpan(2, 1, AnsiColor.BrightBlack),
+            new FormatSpan(3, text.Length - 5, new ConsoleFormat(Bold: true)),
+            new FormatSpan(text.Length - 2, 1, AnsiColor.BrightBlack));
+    }
+
+    private async Task<string?> ReadLineAsync()
+    {
+        if (Console.IsInputRedirected)
+            return Console.ReadLine();
+
+        _promptConfig.Prompt = BuildPrompt(_context.Path);
+        var response = await _prompt.ReadLineAsync();
+        return response.IsSuccess ? response.Text : "";
+    }
 
     public async Task RunAsync()
     {
@@ -83,8 +94,7 @@ public class CommandShell
 
         while (!_context.Exit)
         {
-            AnsiConsole.Markup($"[steelblue1]rs[/][grey]:[/][bold]{Markup.Escape(_context.Path)}[/] [grey]❯[/] ");
-            var line = Console.ReadLine();
+            var line = await ReadLineAsync();
             if (line is null)
                 break;
 
@@ -94,7 +104,7 @@ public class CommandShell
 
             if (!_commands.TryGetValue(tokens[0], out var cmd))
             {
-                PrintError("Unknown command", $"'{tokens[0]}'. Type 'help' to see available commands.");
+                Output.Error("Unknown command", $"'{tokens[0]}'. Type 'help' to see available commands.");
                 continue;
             }
 
@@ -123,29 +133,29 @@ public class CommandShell
                 var details = ex.Problem?.Errors?
                     .SelectMany(field => field.Value.Select(error => $"{field.Key}: {error}"));
 
-                PrintError(title, message, details);
+                Output.Error(title, message, details);
             }
             catch (CliException ex)
             {
-                PrintError(ex.Title, ex.Message);
+                Output.Error(ex.Title, ex.Message);
             }
             catch (OperationCanceledException) when (cts.IsCancellationRequested)
             {
-                Stderr.MarkupLine("[yellow]Cancelled.[/]");
+                Output.Stderr.MarkupLine("[yellow]Cancelled.[/]");
             }
             catch (HttpRequestException ex) when (ex.HttpRequestError == HttpRequestError.SecureConnectionError
                                                     || ex.InnerException is AuthenticationException)
             {
-                PrintError("Secure connection failed",
+                Output.Error("Secure connection failed",
                     "The server certificate isn't trusted, or the server rejected the TLS handshake.");
             }
             catch (HttpRequestException ex)
             {
-                PrintError("Could not reach the server", ex.Message);
+                Output.Error("Could not reach the server", ex.Message);
             }
             catch (Exception ex)
             {
-                PrintError("Unexpected error", ex.Message);
+                Output.Error("Unexpected error", ex.Message);
             }
             finally
             {

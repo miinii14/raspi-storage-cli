@@ -7,7 +7,8 @@ namespace RaspiStorage.Cli.Shell.Commands;
 
 public class TreeCommand : ICommand
 {
-    public string Description => "Get files and folders structure";
+    public string Usage => "tree [path]";
+    public string Description => "Show folder structure recursively";
     private readonly FoldersApi _foldersApi;
     private readonly FilesApi _filesApi;
     private int _foldersCount;
@@ -45,9 +46,7 @@ public class TreeCommand : ICommand
     public async Task ExecuteAsync(string[] args, Context ctx, CancellationToken ct)
     {
         if (args.Length > 1)
-        {
-            throw new CliException("tree", "Usage: tree or tree <path>");
-        }
+            throw new CliException("tree", $"Usage: {Usage}");
 
         _filesCount = 0;
         _foldersCount = 0;
