@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace RaspiStorage.Cli.Shell;
 
 public static class Format
@@ -14,6 +16,6 @@ public static class Format
             unit++;
         }
 
-        return unit == 0 ? $"{bytes} B" : $"{size:0.#} {units[unit]}";
+        return unit == 0 ? $"{bytes} B" : string.Create(CultureInfo.InvariantCulture, $"{size:0.#} {units[unit]}");
     }
 }

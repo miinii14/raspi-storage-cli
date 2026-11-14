@@ -28,13 +28,22 @@ public class ProgressStream : Stream
 
     public override int Read(byte[] buffer, int offset, int count)
     {
-        return _inner.Read(buffer, offset, count);
+        var read = _inner.Read(buffer, offset, count);
+        _onBytes(read);
+        return read;
     }
 
     public override void Write(byte[] buffer, int offset, int count)
     {
         _inner.Write(buffer, offset, count);
+        _onBytes(count);
     }
+
+    public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken ct) =>
+        ReadAsync(buffer.AsMemory(offset, count), ct).AsTask();
+
+    public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken ct) =>
+        WriteAsync(buffer.AsMemory(offset, count), ct).AsTask();
 
     public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken ct = default)
     {
